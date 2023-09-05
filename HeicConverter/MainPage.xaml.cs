@@ -31,6 +31,16 @@ namespace HeicConverter
             this.InitializeComponent();
         }
 
+        private string CapitalizeFirstLetter(string s)
+        {
+            if (s.Length == 0)
+                return s;
+            else if (s.Length == 1)
+                return s.ToUpper();
+            else
+                return char.ToUpper(s[0]) + s.Substring(1);
+        }
+
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
             var picker = new Windows.Storage.Pickers.FileOpenPicker();
@@ -52,7 +62,7 @@ namespace HeicConverter
                     var savePicker = new Windows.Storage.Pickers.FileSavePicker();
                     savePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
                     // Dropdown of file types the user can save the file as
-                    savePicker.FileTypeChoices.Add("Joint Photographic Experts Group JFIF format", new List<string>() { ".jpeg" });
+                    savePicker.FileTypeChoices.Add("Joint Photographic Experts Group JFIF format", new List<string>() { ".jpg", ".jpeg" });
                     savePicker.FileTypeChoices.Add("Portable Network Graphics", new List<string>() { ".png" });
                     savePicker.FileTypeChoices.Add("CompuServe Graphics Interchange Format", new List<string>() { ".gif" });
                     savePicker.FileTypeChoices.Add("Tagged image file multispectral format", new List<string>() { ".tiff" });
@@ -67,7 +77,9 @@ namespace HeicConverter
                     StorageFile targetFile = await savePicker.PickSaveFileAsync();
                     if (targetFile != null)
                     {
-                        imageFromStream.Format = MagickFormat.Jpeg;
+                        string chosenExtension = targetFile.FileType.TrimStart('.');
+                        string formattedExtension = CapitalizeFirstLetter(chosenExtension);
+                        imageFromStream.Format = (MagickFormat)Enum.Parse(typeof(MagickFormat), formattedExtension);
                         // Prevent updates to the remote version of the file until
                         // we finish making changes and call CompleteUpdatesAsync.
                         CachedFileManager.DeferUpdates(targetFile);
