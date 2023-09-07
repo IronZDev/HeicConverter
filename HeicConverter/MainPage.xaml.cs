@@ -39,7 +39,7 @@ namespace HeicConverter
                 return char.ToUpper(s[0]) + s.Substring(1);
         }
 
-        private async void Button_Click(object sender, RoutedEventArgs e)
+        private async void ConvertBtn_Click(object sender, RoutedEventArgs e)
         {
             var picker = new Windows.Storage.Pickers.FileOpenPicker()
             {
@@ -118,25 +118,18 @@ namespace HeicConverter
             if (e.DataView.Contains(StandardDataFormats.StorageItems))
             {
                 var items = await e.DataView.GetStorageItemsAsync();
-                if (items.Any())
+                AddCollectionToFiles(items);
+/*                if (items.Any())
                 {
-                    foreach (StorageFile file in items ) {
-                        bool isValid = file.Name.EndsWith("heic") || file.Name.EndsWith("heif");
-                        if (!files.Any(x => x.Path == file.Path))
-                        {
-                            files.Add(new FileListElement(file.Name, file.Path, isValid ? FileStatus.PENDING : FileStatus.INVALID));
-                        }
-                    }
-                    var storageFile = items[0] as StorageFile;
-/*                    StorageFolder folder = ApplicationData.Current.LocalFolder;
+                   StorageFolder folder = ApplicationData.Current.LocalFolder;
                     if (contentType == "image/jpg" || contentType == "image/png" || contentType == "image/jpeg")
                     {
                         StorageFile newFile = await storageFile.CopyAsync(folder, storageFile.Name, NameCollisionOption.GenerateUniqueName);
                         var bitmapImg = new BitmapImage();
                         bitmapImg.SetSource(await storageFile.OpenAsync(FileAccessMode.Read));
                         imgMain.Source = bitmapImg;
-                    }*/
-                }
+                    }
+                }*/
             }
         }
 
@@ -159,6 +152,48 @@ namespace HeicConverter
         {
             MainApp_Grid.Visibility = Visibility.Visible;
             DragDrop_Grid.Visibility = Visibility.Collapsed;
+        }
+
+        private void RemoveFileBtn_Click(object sender, RoutedEventArgs e)
+        {
+            FileListElement i = (FileListElement)((FrameworkElement)sender).DataContext;
+            files?.Remove(i);
+        }
+
+        private void ClearAllBtn_Click(object sender, RoutedEventArgs e)
+        {
+            files.Clear();
+        }
+
+        private async void AddToListBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var picker = new Windows.Storage.Pickers.FileOpenPicker()
+            {
+                ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail,
+                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary
+            };
+            picker.FileTypeFilter.Add(".heic");
+            picker.FileTypeFilter.Add(".heif");
+
+            IReadOnlyList<StorageFile> filesToAdd = await picker.PickMultipleFilesAsync();
+            AddCollectionToFiles(filesToAdd);
+        }
+
+        private void AddCollectionToFiles(IEnumerable<IStorageItem> items)
+        {
+            if (!items.Any()) return;
+            foreach (var item in items)
+            {
+                if (item is StorageFile)
+                {
+                    StorageFile file = (StorageFile)item;
+                    bool isValid = file.Name.ToLower().EndsWith("heic") || file.Name.ToLower().EndsWith("heif");
+                    if (!files.Any(x => x.Path == file.Path))
+                    {
+                        files.Add(new FileListElement(file.Name, file.Path, isValid ? FileStatus.PENDING : FileStatus.INVALID));
+                    }
+                }
+            }
         }
     }
 }

@@ -20,15 +20,22 @@
             <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Stretch" Spacing="20">
                 <ListView SelectionMode="None" BorderThickness="2" HorizontalAlignment="Stretch" x:Name="FilesList" Height="500" ItemsSource="{x:Bind files}" Margin="20, 0, 20, 0" Background="{ThemeResource SystemControlBackgroundListLowBrush}" BorderBrush="{ThemeResource SystemControlBackgroundListMediumBrush}">
                     <ListView.Header >
-                        <Grid Height="25" HorizontalAlignment="Stretch" Background="{ThemeResource SystemControlBackgroundListMediumBrush}" ColumnSpacing="10">
+                        <Grid Height="45" HorizontalAlignment="Stretch" Background="{ThemeResource SystemControlBackgroundListMediumBrush}" ColumnSpacing="10">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="8*"/>
-                                <ColumnDefinition Width="60"/>
+                                <ColumnDefinition Width="160"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="5,0,0,0" Text="Status"></TextBlock>
-                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="File name" ></TextBlock>
-                            <TextBlock Grid.Column="2" TextAlignment="Right" VerticalAlignment="Center" Text="Remove" Margin="0,0,5,0"></TextBlock>
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="5,0,0,0" Text="Status" FontSize="20"></TextBlock>
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="File name" FontSize="20"></TextBlock>
+                            <StackPanel Orientation="Horizontal" Grid.Column="2" HorizontalAlignment="Right" Margin="0,0,5,0">
+                                <Button x:Name="ClearAllBtn" Margin="0,0,5,0" Width="40" Height="40" ToolTipService.ToolTip="Clear list" Click="ClearAllBtn_Click">
+                                    <SymbolIcon Symbol="Clear"/>
+                                </Button>
+                                <Button x:Name="AddToListBtn" Width="40" Height="40" ToolTipService.ToolTip="Add to list" Click="AddToListBtn_Click">
+                                    <SymbolIcon Symbol="Add"/>
+                                </Button>
+                            </StackPanel>
                         </Grid>
                     </ListView.Header>
                     <ListView.ItemTemplate>
@@ -39,9 +46,9 @@
                                     <ColumnDefinition Width="8*"/>
                                     <ColumnDefinition Width="60"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Text="{Binding Status}"></TextBlock>
+                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="5,0,0,0" Text="{Binding Status}"></TextBlock>
                                 <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Name}"></TextBlock>
-                                <Button Grid.Column="2" Width="35" Height="35" HorizontalAlignment="Right" VerticalAlignment="Center" >
+                                <Button x:Name="RemoveFileBtn" Grid.Column="2" Width="35" Height="35" HorizontalAlignment="Right" VerticalAlignment="Center"  Margin="0,0,5,0" Click="RemoveFileBtn_Click">
                                     <Viewbox VerticalAlignment="Center" HorizontalAlignment="Center" Height="15" Width="15">
                                         <SymbolIcon VerticalAlignment="Center" HorizontalAlignment="Center" Symbol="Cancel"/>
                                     </Viewbox>
@@ -52,11 +59,12 @@
                     <ListView.ItemContainerStyle>
                         <Style TargetType="ListViewItem">
                             <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
-                            <Setter Property="Margin" Value="0,0,0,0"/>
+                            <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Margin" Value="0"/>
                         </Style>
                     </ListView.ItemContainerStyle>
                 </ListView>
-                <Button HorizontalAlignment="Center" Content="Convert" Click="Button_Click"/>
+                <Button x:Name="ConvertBtn" HorizontalAlignment="Center" Content="Convert" Click="ConvertBtn_Click"/>
             </StackPanel>
         </Grid>
     </Grid>
