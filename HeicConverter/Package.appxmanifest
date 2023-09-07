@@ -4,7 +4,10 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-  IgnorableNamespaces="uap mp">
+  xmlns:uap2="http://schemas.microsoft.com/appx/manifest/uap/windows10/2"
+  xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap uap2 uap3 rescap mp">
 
   <Identity
     Name="6397d860-bd6e-425b-8f51-7a14a8635ce2"
@@ -40,6 +43,20 @@
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png"/>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
+	  <Extensions>
+		    <uap3:Extension Category="windows.fileTypeAssociation">
+			    <uap3:FileTypeAssociation Name="heic" >
+				    <uap:SupportedFileTypes>
+					    <uap:FileType>.heic</uap:FileType>
+					    <uap:FileType>.heif</uap:FileType>
+				    </uap:SupportedFileTypes>
+				    <uap2:SupportedVerbs>
+					    <uap3:Verb Id="ConvertJPG">Convert to JPG</uap3:Verb>
+					    <uap3:Verb Id="ConvertPNG">Convert to PNG</uap3:Verb>
+				    </uap2:SupportedVerbs>
+			    </uap3:FileTypeAssociation>
+		    </uap3:Extension>
+	    </Extensions>
     </Application>
   </Applications>
 

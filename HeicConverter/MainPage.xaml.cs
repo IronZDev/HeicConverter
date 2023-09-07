@@ -1,11 +1,18 @@
-﻿using ImageMagick;
+﻿using HeicConverter.Data;
+using ImageMagick;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
+using Windows.UI.WebUI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media.Imaging;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -16,6 +23,7 @@ namespace HeicConverter
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        ObservableCollection<FileListElement> files = new ObservableCollection<FileListElement>();
         public MainPage()
         {
             this.InitializeComponent();
@@ -33,9 +41,11 @@ namespace HeicConverter
 
         private async void Button_Click(object sender, RoutedEventArgs e)
         {
-            var picker = new Windows.Storage.Pickers.FileOpenPicker();
-            picker.ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail;
-            picker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+            var picker = new Windows.Storage.Pickers.FileOpenPicker()
+            {
+                ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail,
+                SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary
+            };
             picker.FileTypeFilter.Add(".heic");
             picker.FileTypeFilter.Add(".heif");
 
@@ -49,8 +59,11 @@ namespace HeicConverter
                 using (var imageFromStream = new MagickImage(byteArray))
                 {
                     Debug.WriteLine(imageFromStream.FormatInfo);
-                    var savePicker = new Windows.Storage.Pickers.FileSavePicker();
-                    savePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary;
+                    var savePicker = new Windows.Storage.Pickers.FileSavePicker
+                    {
+                        SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary,
+                        SuggestedFileName = sampleFile.DisplayName
+                    };
                     // Dropdown of file types the user can save the file as
                     savePicker.FileTypeChoices.Add("Joint Photographic Experts Group JFIF format", new List<string>() { ".jpg", ".jpeg" });
                     savePicker.FileTypeChoices.Add("Portable Network Graphics", new List<string>() { ".png" });
@@ -63,7 +76,6 @@ namespace HeicConverter
 
 
                     // Default file name if the user does not type one in or select a file to replace
-                    savePicker.SuggestedFileName = sampleFile.DisplayName;
                     StorageFile targetFile = await savePicker.PickSaveFileAsync();
                     if (targetFile != null)
                     {
@@ -98,6 +110,55 @@ namespace HeicConverter
                     }
                 }
             }
+        }
+
+        private async void Grid_Drop(object sender, DragEventArgs e)
+        {
+            Grid_DragLeave(sender, e);
+            if (e.DataView.Contains(StandardDataFormats.StorageItems))
+            {
+                var items = await e.DataView.GetStorageItemsAsync();
+                if (items.Any())
+                {
+                    foreach (StorageFile file in items ) {
+                        bool isValid = file.Name.EndsWith("heic") || file.Name.EndsWith("heif");
+                        if (!files.Any(x => x.Path == file.Path))
+                        {
+                            files.Add(new FileListElement(file.Name, file.Path, isValid ? FileStatus.PENDING : FileStatus.INVALID));
+                        }
+                    }
+                    var storageFile = items[0] as StorageFile;
+/*                    StorageFolder folder = ApplicationData.Current.LocalFolder;
+                    if (contentType == "image/jpg" || contentType == "image/png" || contentType == "image/jpeg")
+                    {
+                        StorageFile newFile = await storageFile.CopyAsync(folder, storageFile.Name, NameCollisionOption.GenerateUniqueName);
+                        var bitmapImg = new BitmapImage();
+                        bitmapImg.SetSource(await storageFile.OpenAsync(FileAccessMode.Read));
+                        imgMain.Source = bitmapImg;
+                    }*/
+                }
+            }
+        }
+
+        private void Grid_DragOver(object sender, DragEventArgs e)
+        {
+            e.AcceptedOperation = DataPackageOperation.Copy;
+            e.DragUIOverride.Caption = "Drop here to add to the list";
+            e.DragUIOverride.IsGlyphVisible = true;
+            e.DragUIOverride.IsContentVisible = true;
+            e.DragUIOverride.IsCaptionVisible = true;
+        }
+
+        private void Grid_DragEnter(object sender, DragEventArgs e)
+        {
+            MainApp_Grid.Visibility = Visibility.Collapsed;
+            DragDrop_Grid.Visibility = Visibility.Visible;
+        }
+
+        private void Grid_DragLeave(object sender, DragEventArgs e)
+        {
+            MainApp_Grid.Visibility = Visibility.Visible;
+            DragDrop_Grid.Visibility = Visibility.Collapsed;
         }
     }
 }
