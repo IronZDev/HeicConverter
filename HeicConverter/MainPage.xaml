@@ -6,7 +6,14 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    xmlns:Interactivity="using:Microsoft.Xaml.Interactivity" 
+    xmlns:Interactions="using:Microsoft.Xaml.Interactions.Core" 
+    xmlns:converters="using:HeicConverter.Data.Converters"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <UserControl.Resources>
+        <converters:FileStatusToNameConverter x:Key="FileStatusToNameConverter"/>
+        <converters:FileStatusToStringConverter x:Key="FileStatusToStringConverter"/>
+    </UserControl.Resources>
     <Grid AllowDrop="True" Drop="Grid_Drop" DragOver="Grid_DragOver" DragEnter="Grid_DragEnter" DragLeave="Grid_DragLeave" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid x:Name="DragDrop_Grid" Visibility="Collapsed">
             <Rectangle x:Name="DragDropMask" Fill="#7E808080" Margin="20,20,20,20" Stroke="#999999" StrokeThickness="2"/>
@@ -18,7 +25,7 @@
         </Grid>
         <Grid x:Name="MainApp_Grid" Visibility="Visible">
             <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Stretch" Spacing="20">
-                <ListView SelectionMode="None" BorderThickness="2" HorizontalAlignment="Stretch" x:Name="FilesList" Height="500" ItemsSource="{x:Bind files}" Margin="20, 0, 20, 0" Background="{ThemeResource SystemControlBackgroundListLowBrush}" BorderBrush="{ThemeResource SystemControlBackgroundListMediumBrush}">
+                <ListView SelectionMode="None" BorderThickness="2" HorizontalAlignment="Stretch" x:Name="FilesList" Height="500" ItemsSource="{x:Bind files, Mode=OneWay}" Margin="20, 0, 20, 0" Background="{ThemeResource SystemControlBackgroundListLowBrush}" BorderBrush="{ThemeResource SystemControlBackgroundListMediumBrush}">
                     <ListView.Header >
                         <Grid Height="45" HorizontalAlignment="Stretch" Background="{ThemeResource SystemControlBackgroundListMediumBrush}" ColumnSpacing="10">
                             <Grid.ColumnDefinitions>
@@ -26,8 +33,8 @@
                                 <ColumnDefinition Width="8*"/>
                                 <ColumnDefinition Width="160"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="5,0,0,0" Text="Status" FontSize="20"></TextBlock>
-                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="File name" FontSize="20"></TextBlock>
+                            <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="5,0,0,0" Text="Status" FontSize="18"></TextBlock>
+                            <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="File name" FontSize="18"></TextBlock>
                             <StackPanel Orientation="Horizontal" Grid.Column="2" HorizontalAlignment="Right" Margin="0,0,5,0">
                                 <Button x:Name="ClearAllBtn" Margin="0,0,5,0" Width="40" Height="40" ToolTipService.ToolTip="Clear list" Click="ClearAllBtn_Click">
                                     <SymbolIcon Symbol="Clear"/>
@@ -46,7 +53,41 @@
                                     <ColumnDefinition Width="8*"/>
                                     <ColumnDefinition Width="60"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" VerticalAlignment="Center" Margin="5,0,0,0" Text="{Binding Status}"></TextBlock>
+                                <StackPanel Orientation="Horizontal" Grid.Column="0" Margin="5,0,0,0">
+                                    <FontIcon x:Name="StatusIcon" VerticalAlignment="Center" Glyph="&#xE930;" Visibility="Visible"/>
+                                    <ProgressRing x:Name="StatusLoading" VerticalAlignment="Center" Visibility="Collapsed" IsActive="True"/>
+                                    <TextBlock VerticalAlignment="Center" Margin="5,0,0,0" Text="{Binding Status, Converter={StaticResource FileStatusToNameConverter}, Mode=OneWay}"/>
+                                    <Interactivity:Interaction.Behaviors>
+                                        <Interactions:DataTriggerBehavior Binding="{Binding Status, Converter={StaticResource FileStatusToStringConverter}, Mode=OneWay}" Value="PENDING">
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Visibility" Value="Visible" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusLoading}" PropertyName="Visibility" Value="Collapsed" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Foreground" Value="{ThemeResource SystemControlForegroundAccentBrush}" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Glyph" Value="&#xE712;" />
+                                        </Interactions:DataTriggerBehavior>
+                                        <Interactions:DataTriggerBehavior Binding="{Binding Status, Converter={StaticResource FileStatusToStringConverter}, Mode=OneWay}" Value="IN_PROGRESS">
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Visibility" Value="Collapsed" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusLoading}" PropertyName="Visibility" Value="Visible" />
+                                        </Interactions:DataTriggerBehavior>
+                                        <Interactions:DataTriggerBehavior Binding="{Binding Status, Converter={StaticResource FileStatusToStringConverter}, Mode=OneWay}" Value="COMPLETED">
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Visibility" Value="Visible" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusLoading}" PropertyName="Visibility" Value="Collapsed" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Foreground" Value="Green" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Glyph" Value="&#xE930;" />
+                                        </Interactions:DataTriggerBehavior>
+                                        <Interactions:DataTriggerBehavior Binding="{Binding Status, Converter={StaticResource FileStatusToStringConverter}, Mode=OneWay}" Value="INVALID">
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Visibility" Value="Visible" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusLoading}" PropertyName="Visibility" Value="Collapsed" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Foreground" Value="Orange" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Glyph" Value="&#xE7BA;" />
+                                        </Interactions:DataTriggerBehavior>
+                                        <Interactions:DataTriggerBehavior Binding="{Binding Status, Converter={StaticResource FileStatusToStringConverter}, Mode=OneWay}" Value="ERROR">
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Visibility" Value="Visible" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusLoading}" PropertyName="Visibility" Value="Collapsed" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Foreground" Value="Red" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Glyph" Value="&#xE783;" />
+                                        </Interactions:DataTriggerBehavior>
+                                    </Interactivity:Interaction.Behaviors>
+                                </StackPanel>
                                 <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Name}"></TextBlock>
                                 <Button x:Name="RemoveFileBtn" Grid.Column="2" Width="35" Height="35" HorizontalAlignment="Right" VerticalAlignment="Center"  Margin="0,0,5,0" Click="RemoveFileBtn_Click">
                                     <Viewbox VerticalAlignment="Center" HorizontalAlignment="Center" Height="15" Width="15">
