@@ -37,9 +37,8 @@ namespace HeicConverter
 
         private async void ConvertBtn_Click(object sender, RoutedEventArgs e)
         {
-            ConvertionInProgress.IsActive = true;
-            ConvertionInProgress.Visibility = Visibility.Visible;
-            ConvertBtn.IsEnabled = false;
+            ViewModel.IsConversionInProgress = true;
+            ViewModel.ConvertedFilesCounter = 0;
             var saveFolderPicker = new Windows.Storage.Pickers.FolderPicker
             {
                 ViewMode = Windows.Storage.Pickers.PickerViewMode.List,
@@ -71,9 +70,7 @@ namespace HeicConverter
             }
             await Task.WhenAll(tasks);
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
-                ConvertionInProgress.IsActive = false;
-                ConvertionInProgress.Visibility = Visibility.Collapsed;
-                ConvertBtn.IsEnabled = true;
+                ViewModel.IsConversionInProgress = false;
             });
         }
 
@@ -110,6 +107,9 @@ namespace HeicConverter
                 {
                     img.Dispose();
                 }
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
+                    ViewModel.ConvertedFilesCounter++;
+                });
             }
         }
 
@@ -215,9 +215,12 @@ namespace HeicConverter
                     StorageFile file = (StorageFile)item;
                     string token = Utils.RememberStorageItem(file);
                     bool isValid = file.Name.ToLower().EndsWith("heic") || file.Name.ToLower().EndsWith("heif");
-                    if (!ViewModel.files.Any(x => x.Path == file.Path))
+                    if (!ViewModel.files.Any(x => x.Path == file.Path) && isValid)
                     {
-                        ViewModel.files.Add(new FileListElement(file.Name, file.Path, isValid ? FileStatus.PENDING : FileStatus.INVALID, token));
+                        ViewModel.files.Add(new FileListElement(file.Name, file.Path, FileStatus.PENDING, token));
+                    } else
+                    {
+                        // TODO MessageBox
                     }
                 }
             }

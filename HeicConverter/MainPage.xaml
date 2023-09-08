@@ -13,6 +13,7 @@
     <UserControl.Resources>
         <converters:FileStatusToNameConverter x:Key="FileStatusToNameConverter"/>
         <converters:FileStatusToStringConverter x:Key="FileStatusToStringConverter"/>
+		<converters:FilesListToIsEmptyBoolConverter x:Key="FilesListToIsEmptyBoolConverter"/>
     </UserControl.Resources>
     <Grid AllowDrop="True" Drop="Grid_Drop" DragOver="Grid_DragOver" DragEnter="Grid_DragEnter" DragLeave="Grid_DragLeave" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid x:Name="DragDrop_Grid" Visibility="Collapsed">
@@ -109,11 +110,22 @@
                         </Style>
                     </ListView.ItemContainerStyle>
                 </ListView>
-				<Button x:Name="ConvertBtn" HorizontalAlignment="Center" Click="ConvertBtn_Click">
-					<StackPanel Orientation="Horizontal">
-						<ProgressRing x:Name="ConvertionInProgress" Visibility="Collapsed"/>
-						<TextBlock Margin="5,0,0,0" Text="Convert"/>
-					</StackPanel>
+                <Button x:Name="ConvertBtn" HorizontalAlignment="Center" Click="ConvertBtn_Click" IsEnabled="{x:Bind ViewModel.isConvertButtonEnabled(ViewModel.IsConversionInProgress, ViewModel.files), Mode=OneWay}" >
+                    <StackPanel Orientation="Horizontal">
+                        <Interactivity:Interaction.Behaviors>
+                            <Interactions:DataTriggerBehavior Binding="{x:Bind ViewModel.IsConversionInProgress, Mode=OneWay}" Value="false">
+                                <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnSymbol}" PropertyName="Visibility" Value="Visible" />
+                                <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnProgressRing}" PropertyName="Visibility" Value="Collapsed" />
+                            </Interactions:DataTriggerBehavior>
+                            <Interactions:DataTriggerBehavior Binding="{x:Bind ViewModel.IsConversionInProgress, Mode=OneWay}" Value="true">
+                                <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnSymbol}" PropertyName="Visibility" Value="Collapsed" />
+                                <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnProgressRing}" PropertyName="Visibility" Value="Visible" />
+                            </Interactions:DataTriggerBehavior>
+                        </Interactivity:Interaction.Behaviors>
+                        <SymbolIcon x:Name="ConvertBtnSymbol" Symbol="Sync"/>
+                        <ProgressRing x:Name="ConvertBtnProgressRing" Visibility="Collapsed" IsActive="True"/>
+                        <TextBlock x:Name="ConvertBtnText" Margin="5,0,0,0" Text="{x:Bind ViewModel.getConvertBtnText(ViewModel.IsConversionInProgress, ViewModel.ConvertedFilesCounter, ViewModel.files), Mode=OneWay}"/>
+                    </StackPanel>
 				</Button>
             </StackPanel>
         </Grid>
