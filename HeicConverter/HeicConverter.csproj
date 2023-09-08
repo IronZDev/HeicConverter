@@ -121,8 +121,9 @@
     </Compile>
     <Compile Include="Data\Converters\FileStatusToStringConverter.cs" />
     <Compile Include="Data\Converters\FileStatusToNameConverter.cs" />
+    <Compile Include="Data\DataModels\FormatOption.cs" />
     <Compile Include="Data\Converters\NegateBoolConverter.cs" />
-    <Compile Include="Data\FileListElement.cs" />
+    <Compile Include="Data\DataModels\FileListElement.cs" />
     <Compile Include="Data\MainPageViewModel.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>

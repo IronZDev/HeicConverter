@@ -24,6 +24,8 @@ namespace HeicConverter
     {
         private const string SAVE_FOLDER_ACCESS_TOKEN = "SAVE_FOLDER_ACCESS_TOKEN";
         private const int CHUNK_SIZE = 5; // We don't want to convert big number of files at once TODO: Improve so we do not have to wait for the entire chunk to finish before we start a new one
+        private const bool OPTIMIZE_IMG = true;
+        private const bool EXTEND_OPTIMIZATION = false;
         private MainPageViewModel ViewModel;
         public MainPage()
         {
@@ -143,12 +145,29 @@ namespace HeicConverter
             if (status == Windows.Storage.Provider.FileUpdateStatus.Complete)
             {
                 Debug.WriteLine("File " + targetFile.Name + " was saved.");
+                await OptimizeImage(targetFile);
                 return true;
             }
             else
             {
                 Debug.WriteLine("File " + targetFile.Name + " couldn't be saved.");
                 return false;
+            }
+        }
+
+        private async Task OptimizeImage(StorageFile img)
+        {
+            if (img == null) return;
+            if (!OPTIMIZE_IMG) return;
+
+            var optimizer = new ImageOptimizer
+            {
+                IgnoreUnsupportedFormats = true,
+                OptimalCompression = EXTEND_OPTIMIZATION,
+            };
+            using (IRandomAccessStream fileStream = await img.OpenAsync(FileAccessMode.ReadWrite))
+            {
+                optimizer.LosslessCompress(fileStream.AsStream());
             }
         }
 

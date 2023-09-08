@@ -1,4 +1,6 @@
-﻿using System.Collections.ObjectModel;
+﻿using HeicConverter.Data.Converters;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 
 namespace HeicConverter.Data
@@ -10,6 +12,17 @@ namespace HeicConverter.Data
         public ObservableCollection<FileListElement> files = new ObservableCollection<FileListElement>();
         public bool _isConversionInProgress = false;
         public long _convertedFilesCounter = 0;
+
+        public List<FormatOption> formatOptions = new List<FormatOption> {
+            new FormatOption("Joint Photographic Experts Group JFIF format (.jpg)", "jpg"),
+            new FormatOption("Joint Photographic Experts Group JFIF format (.jpeg)", "jpeg"),
+            new FormatOption("Portable Network Graphics (.png)", "png"),
+            new FormatOption("Tagged image file multispectral format (.tiff)", "tiff"),
+            new FormatOption("Microsoft Windows bitmap (.bmp)", "bmp"),
+            new FormatOption("Portable Document Format (.pdf)", "pdf"),
+            new FormatOption("Scalable Vector Graphics (.svg)", "svg"),
+            new FormatOption("Weppy image format (.webp)", "webp")
+        };
 
         public bool IsConversionInProgress {  
             get { return _isConversionInProgress; }

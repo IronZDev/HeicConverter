@@ -26,7 +26,7 @@
         </Grid>
         <Grid x:Name="MainApp_Grid" Visibility="Visible">
             <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Stretch" Spacing="20">
-                <ListView SelectionMode="None" BorderThickness="2" HorizontalAlignment="Stretch" x:Name="FilesList" Height="500" ItemsSource="{x:Bind ViewModel.files, Mode=OneWay}" Margin="20, 0, 20, 0" Background="{ThemeResource SystemControlBackgroundListLowBrush}" BorderBrush="{ThemeResource SystemControlBackgroundListMediumBrush}">
+                <ListView x:Name="FilesList" SelectionMode="None" BorderThickness="2" HorizontalAlignment="Stretch" Height="500" ItemsSource="{x:Bind ViewModel.files, Mode=OneWay}" Margin="20, 0, 20, 0" Background="{ThemeResource SystemControlBackgroundListLowBrush}" BorderBrush="{ThemeResource SystemControlBackgroundListMediumBrush}">
                     <ListView.Header >
                         <Grid Height="45" HorizontalAlignment="Stretch" Background="{ThemeResource SystemControlBackgroundListMediumBrush}" ColumnSpacing="10">
                             <Grid.ColumnDefinitions>
@@ -68,33 +68,38 @@
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusLoading}" PropertyName="Visibility" Value="Collapsed" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Foreground" Value="{ThemeResource SystemControlForegroundAccentBrush}" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Glyph" Value="&#xE712;" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=RemoveFileBtn}" PropertyName="IsEnabled" Value="true" />
                                         </Interactions:DataTriggerBehavior>
                                         <Interactions:DataTriggerBehavior Binding="{Binding Status, Converter={StaticResource FileStatusToStringConverter}, Mode=OneWay}" Value="IN_PROGRESS">
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Visibility" Value="Collapsed" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusLoading}" PropertyName="Visibility" Value="Visible" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=RemoveFileBtn}" PropertyName="IsEnabled" Value="false" />
                                         </Interactions:DataTriggerBehavior>
                                         <Interactions:DataTriggerBehavior Binding="{Binding Status, Converter={StaticResource FileStatusToStringConverter}, Mode=OneWay}" Value="COMPLETED">
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Visibility" Value="Visible" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusLoading}" PropertyName="Visibility" Value="Collapsed" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Foreground" Value="Green" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Glyph" Value="&#xE930;" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=RemoveFileBtn}" PropertyName="IsEnabled" Value="true" />
                                         </Interactions:DataTriggerBehavior>
                                         <Interactions:DataTriggerBehavior Binding="{Binding Status, Converter={StaticResource FileStatusToStringConverter}, Mode=OneWay}" Value="INVALID">
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Visibility" Value="Visible" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusLoading}" PropertyName="Visibility" Value="Collapsed" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Foreground" Value="Orange" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Glyph" Value="&#xE7BA;" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=RemoveFileBtn}" PropertyName="IsEnabled" Value="true" />
                                         </Interactions:DataTriggerBehavior>
                                         <Interactions:DataTriggerBehavior Binding="{Binding Status, Converter={StaticResource FileStatusToStringConverter}, Mode=OneWay}" Value="ERROR">
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Visibility" Value="Visible" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusLoading}" PropertyName="Visibility" Value="Collapsed" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Foreground" Value="Red" />
                                             <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=StatusIcon}" PropertyName="Glyph" Value="&#xE783;" />
+                                            <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=RemoveFileBtn}" PropertyName="IsEnabled" Value="true" />
                                         </Interactions:DataTriggerBehavior>
                                     </Interactivity:Interaction.Behaviors>
                                 </StackPanel>
                                 <TextBlock Grid.Column="1" VerticalAlignment="Center" Text="{Binding Name}"></TextBlock>
-                                <Button x:Name="RemoveFileBtn" Grid.Column="2" Width="35" Height="35" HorizontalAlignment="Right" VerticalAlignment="Center"  Margin="0,0,5,0" Click="RemoveFileBtn_Click" IsEnabled="{x:Bind ViewModel.IsConversionInProgress, Converter={StaticResource NegateBoolConverter}, Mode=OneWay}">
+                                <Button x:Name="RemoveFileBtn" Grid.Column="2" Width="35" Height="35" HorizontalAlignment="Right" VerticalAlignment="Center"  Margin="0,0,5,0" Click="RemoveFileBtn_Click">
                                     <Viewbox VerticalAlignment="Center" HorizontalAlignment="Center" Height="15" Width="15">
                                         <SymbolIcon VerticalAlignment="Center" HorizontalAlignment="Center" Symbol="Cancel"/>
                                     </Viewbox>
@@ -110,23 +115,26 @@
                         </Style>
                     </ListView.ItemContainerStyle>
                 </ListView>
-                <Button x:Name="ConvertBtn" HorizontalAlignment="Center" Click="ConvertBtn_Click" IsEnabled="{x:Bind ViewModel.isConvertButtonEnabled(ViewModel.IsConversionInProgress, ViewModel.files), Mode=OneWay}" >
-                    <StackPanel Orientation="Horizontal">
-                        <Interactivity:Interaction.Behaviors>
-                            <Interactions:DataTriggerBehavior Binding="{x:Bind ViewModel.IsConversionInProgress, Mode=OneWay}" Value="false">
-                                <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnSymbol}" PropertyName="Visibility" Value="Visible" />
-                                <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnProgressRing}" PropertyName="Visibility" Value="Collapsed" />
-                            </Interactions:DataTriggerBehavior>
-                            <Interactions:DataTriggerBehavior Binding="{x:Bind ViewModel.IsConversionInProgress, Mode=OneWay}" Value="true">
-                                <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnSymbol}" PropertyName="Visibility" Value="Collapsed" />
-                                <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnProgressRing}" PropertyName="Visibility" Value="Visible" />
-                            </Interactions:DataTriggerBehavior>
-                        </Interactivity:Interaction.Behaviors>
-                        <SymbolIcon x:Name="ConvertBtnSymbol" Symbol="Sync"/>
-                        <ProgressRing x:Name="ConvertBtnProgressRing" Visibility="Collapsed" IsActive="True"/>
-                        <TextBlock x:Name="ConvertBtnText" Margin="5,0,0,0" Text="{x:Bind ViewModel.getConvertBtnText(ViewModel.IsConversionInProgress, ViewModel.ConvertedFilesCounter, ViewModel.files), Mode=OneWay}"/>
-                    </StackPanel>
-				</Button>
+                <StackPanel Orientation="Horizontal" Spacing="20">
+                    <ComboBox Width="200"/>
+                    <Button x:Name="ConvertBtn" HorizontalAlignment="Center" Click="ConvertBtn_Click" IsEnabled="{x:Bind ViewModel.isConvertButtonEnabled(ViewModel.IsConversionInProgress, ViewModel.files), Mode=OneWay}" >
+                        <StackPanel Orientation="Horizontal">
+                            <Interactivity:Interaction.Behaviors>
+                                <Interactions:DataTriggerBehavior Binding="{x:Bind ViewModel.IsConversionInProgress, Mode=OneWay}" Value="false">
+                                    <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnSymbol}" PropertyName="Visibility" Value="Visible" />
+                                    <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnProgressRing}" PropertyName="Visibility" Value="Collapsed" />
+                                </Interactions:DataTriggerBehavior>
+                                <Interactions:DataTriggerBehavior Binding="{x:Bind ViewModel.IsConversionInProgress, Mode=OneWay}" Value="true">
+                                    <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnSymbol}" PropertyName="Visibility" Value="Collapsed" />
+                                    <Interactions:ChangePropertyAction TargetObject="{Binding ElementName=ConvertBtnProgressRing}" PropertyName="Visibility" Value="Visible" />
+                                </Interactions:DataTriggerBehavior>
+                            </Interactivity:Interaction.Behaviors>
+                            <SymbolIcon x:Name="ConvertBtnSymbol" Symbol="Sync"/>
+                            <ProgressRing x:Name="ConvertBtnProgressRing" Visibility="Collapsed" IsActive="True"/>
+                            <TextBlock x:Name="ConvertBtnText" Margin="5,0,0,0" Text="{x:Bind ViewModel.getConvertBtnText(ViewModel.IsConversionInProgress, ViewModel.ConvertedFilesCounter, ViewModel.files), Mode=OneWay}"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
             </StackPanel>
         </Grid>
     </Grid>
