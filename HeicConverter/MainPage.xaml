@@ -13,7 +13,6 @@
     <UserControl.Resources>
         <converters:FileStatusToNameConverter x:Key="FileStatusToNameConverter"/>
         <converters:FileStatusToStringConverter x:Key="FileStatusToStringConverter"/>
-		<converters:FilesListToIsEmptyBoolConverter x:Key="FilesListToIsEmptyBoolConverter"/>
     </UserControl.Resources>
     <Grid AllowDrop="True" Drop="Grid_Drop" DragOver="Grid_DragOver" DragEnter="Grid_DragEnter" DragLeave="Grid_DragLeave" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <Grid x:Name="DragDrop_Grid" Visibility="Collapsed">

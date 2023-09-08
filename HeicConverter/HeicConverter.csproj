@@ -119,7 +119,6 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Data\Converters\FilesListToIsEmptyBoolConverter.cs" />
     <Compile Include="Data\Converters\FileStatusToStringConverter.cs" />
     <Compile Include="Data\Converters\FileStatusToNameConverter.cs" />
     <Compile Include="Data\FileListElement.cs" />

@@ -1,22 +1,17 @@
 ﻿using HeicConverter.Data;
 using ImageMagick;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.ConstrainedExecution;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Streams;
-using Windows.UI.WebUI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Media.Imaging;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -49,6 +44,7 @@ namespace HeicConverter
             var _fileAccess = await saveFolderPicker.PickSingleFolderAsync();
             if (_fileAccess == null)
             {
+                ViewModel.IsConversionInProgress = false;
                 return;
             }
 
@@ -69,7 +65,8 @@ namespace HeicConverter
                 }
             }
             await Task.WhenAll(tasks);
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
                 ViewModel.IsConversionInProgress = false;
             });
         }
@@ -107,7 +104,8 @@ namespace HeicConverter
                 {
                     img.Dispose();
                 }
-                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
                     ViewModel.ConvertedFilesCounter++;
                 });
             }
@@ -218,7 +216,8 @@ namespace HeicConverter
                     if (!ViewModel.files.Any(x => x.Path == file.Path) && isValid)
                     {
                         ViewModel.files.Add(new FileListElement(file.Name, file.Path, FileStatus.PENDING, token));
-                    } else
+                    }
+                    else
                     {
                         // TODO MessageBox
                     }
