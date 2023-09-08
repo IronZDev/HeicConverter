@@ -115,8 +115,8 @@
                         </Style>
                     </ListView.ItemContainerStyle>
                 </ListView>
-                <StackPanel Orientation="Horizontal" Spacing="20">
-                    <ComboBox Width="200"/>
+                <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
+                    <ComboBox x:Name="FormatOptionsCB" Width="200" ItemsSource="{x:Bind ViewModel.formatOptions}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" />
                     <Button x:Name="ConvertBtn" HorizontalAlignment="Center" Click="ConvertBtn_Click" IsEnabled="{x:Bind ViewModel.isConvertButtonEnabled(ViewModel.IsConversionInProgress, ViewModel.files), Mode=OneWay}" >
                         <StackPanel Orientation="Horizontal">
                             <Interactivity:Interaction.Behaviors>

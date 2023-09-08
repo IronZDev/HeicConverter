@@ -10,8 +10,9 @@ namespace HeicConverter.Data
         private const string CONVERT_BTN_PENDING_TEXT = "Convert";
         private const string CONVERT_BTN_CONVERTING_TEXT = "Converting...";
         public ObservableCollection<FileListElement> files = new ObservableCollection<FileListElement>();
-        public bool _isConversionInProgress = false;
-        public long _convertedFilesCounter = 0;
+        private bool _isConversionInProgress = false;
+        private long _convertedFilesCounter = 0;
+        private FormatOption _selectedItem = null;
 
         public List<FormatOption> formatOptions = new List<FormatOption> {
             new FormatOption("Joint Photographic Experts Group JFIF format (.jpg)", "jpg"),
@@ -24,6 +25,12 @@ namespace HeicConverter.Data
             new FormatOption("Weppy image format (.webp)", "webp")
         };
 
+        public FormatOption SelectedItem
+        {
+            get {  return _selectedItem; }
+            set { if (value == _selectedItem) return; _selectedItem = value; OnPropertyChanged("SelectedItem"); }
+        }
+
         public bool IsConversionInProgress {  
             get { return _isConversionInProgress; }
             set { _isConversionInProgress = value; OnPropertyChanged("IsConversionInProgress"); }
@@ -33,6 +40,11 @@ namespace HeicConverter.Data
         {
             get { return _convertedFilesCounter; }
             set { _convertedFilesCounter = value; OnPropertyChanged("ConvertedFilesCounter"); }
+        }
+
+        public MainPageViewModel()
+        {
+            SelectedItem = formatOptions[0];
         }
 
         public bool isConvertButtonEnabled(bool isConversionInProgress, ObservableCollection<FileListElement> files)
