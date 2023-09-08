@@ -15,14 +15,14 @@ namespace HeicConverter.Data
         private FormatOption _selectedItem = null;
 
         public List<FormatOption> formatOptions = new List<FormatOption> {
-            new FormatOption("Joint Photographic Experts Group JFIF format (.jpg)", "jpg"),
-            new FormatOption("Joint Photographic Experts Group JFIF format (.jpeg)", "jpeg"),
-            new FormatOption("Portable Network Graphics (.png)", "png"),
-            new FormatOption("Tagged image file multispectral format (.tiff)", "tiff"),
-            new FormatOption("Microsoft Windows bitmap (.bmp)", "bmp"),
-            new FormatOption("Portable Document Format (.pdf)", "pdf"),
-            new FormatOption("Scalable Vector Graphics (.svg)", "svg"),
-            new FormatOption("Weppy image format (.webp)", "webp")
+            new FormatOption("Joint Photographic Experts Group JFIF format (.jpg)", "Jpg"),
+            new FormatOption("Joint Photographic Experts Group JFIF format (.jpeg)", "Jpeg"),
+            new FormatOption("Portable Network Graphics (.png)", "Png"),
+            new FormatOption("Tagged image file multispectral format (.tiff)", "Tiff"),
+            new FormatOption("Microsoft Windows bitmap (.bmp)", "Bmp"),
+            new FormatOption("Portable Document Format (.pdf)", "Pdf"),
+            new FormatOption("Scalable Vector Graphics (.svg)", "Svg"),
+            new FormatOption("Weppy image format (.webp)", "WebP")
         };
 
         public FormatOption SelectedItem

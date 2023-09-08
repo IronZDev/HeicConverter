@@ -131,14 +131,13 @@ namespace HeicConverter
 
         private void ConvertFile(MagickImage img)
         {
-            // TODO
-            img.Format = MagickFormat.Png;
+            img.Format = (MagickFormat)Enum.Parse(typeof(MagickFormat), ViewModel.SelectedItem.Extension);
         }
 
         private async Task<bool> SaveFile(MagickImage img, string fileName)
         {
             StorageFolder targetFolder = await Utils.GetFolderForToken(SAVE_FOLDER_ACCESS_TOKEN);
-            StorageFile targetFile = await targetFolder.CreateFileAsync($"{fileName}.png", CreationCollisionOption.GenerateUniqueName);
+            StorageFile targetFile = await targetFolder.CreateFileAsync($"{fileName}.{ViewModel.SelectedItem.Extension.ToLower()}", CreationCollisionOption.GenerateUniqueName);
             await FileIO.WriteBytesAsync(targetFile, img.ToByteArray());
             Windows.Storage.Provider.FileUpdateStatus status =
                 await CachedFileManager.CompleteUpdatesAsync(targetFile);
