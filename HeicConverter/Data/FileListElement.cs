@@ -23,16 +23,18 @@ namespace HeicConverter.Data
 
         public string Name { get; }
         public string Path { get; }
+        public string Token { get; }
         public FileStatus Status { 
             get { return _status; }
             set { _status = value; OnPropertyChanged("Status"); } 
         } 
 
-        public FileListElement (string name, string path, FileStatus status)
+        public FileListElement (string name, string path, FileStatus status, string token)
         {
             Name = name;
             Path = path;
             Status = status;
+            Token = token;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;

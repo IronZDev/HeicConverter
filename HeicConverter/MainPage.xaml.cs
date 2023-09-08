@@ -1,14 +1,18 @@
 ﻿using HeicConverter.Data;
 using ImageMagick;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
+using Windows.Storage.AccessCache;
+using Windows.Storage.Streams;
 using Windows.UI.WebUI;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
@@ -23,6 +27,7 @@ namespace HeicConverter
     /// </summary>
     public sealed partial class MainPage : Page
     {
+        private const string SAVE_FOLDER_ACCESS_TOKEN = "SAVE_FOLDER_ACCESS_TOKEN";
         ObservableCollection<FileListElement> files = new ObservableCollection<FileListElement>();
         public MainPage()
         {
@@ -41,76 +46,91 @@ namespace HeicConverter
 
         private async void ConvertBtn_Click(object sender, RoutedEventArgs e)
         {
-            var picker = new Windows.Storage.Pickers.FileOpenPicker()
+            var saveFolderPicker = new Windows.Storage.Pickers.FolderPicker
             {
-                ViewMode = Windows.Storage.Pickers.PickerViewMode.Thumbnail,
+                ViewMode = Windows.Storage.Pickers.PickerViewMode.List,
                 SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary
             };
-            picker.FileTypeFilter.Add(".heic");
-            picker.FileTypeFilter.Add(".heif");
+            saveFolderPicker.FileTypeFilter.Add("*");
 
-            StorageFile sampleFile = await picker.PickSingleFileAsync();
-            using (var inputStream = await sampleFile.OpenSequentialReadAsync())
+            var _fileAccess = await saveFolderPicker.PickSingleFolderAsync();
+            if (_fileAccess == null)
             {
-                var readStream = inputStream.AsStreamForRead();
+                return;
+            }
 
-                var byteArray = new byte[readStream.Length];
-                await readStream.ReadAsync(byteArray, 0, byteArray.Length);
-                using (var imageFromStream = new MagickImage(byteArray))
+            Utils.RememberStorageItem(_fileAccess, SAVE_FOLDER_ACCESS_TOKEN);
+            StorageApplicationPermissions.FutureAccessList.AddOrReplace(SAVE_FOLDER_ACCESS_TOKEN, _fileAccess);
+            
+            foreach (FileListElement file in files)
+            {
+                if (file.Status != FileStatus.INVALID && file.Status != FileStatus.COMPLETED)
                 {
-                    Debug.WriteLine(imageFromStream.FormatInfo);
-                    var savePicker = new Windows.Storage.Pickers.FileSavePicker
-                    {
-                        SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.PicturesLibrary,
-                        SuggestedFileName = sampleFile.DisplayName
-                    };
-                    // Dropdown of file types the user can save the file as
-                    savePicker.FileTypeChoices.Add("Joint Photographic Experts Group JFIF format", new List<string>() { ".jpg", ".jpeg" });
-                    savePicker.FileTypeChoices.Add("Portable Network Graphics", new List<string>() { ".png" });
-                    savePicker.FileTypeChoices.Add("CompuServe Graphics Interchange Format", new List<string>() { ".gif" });
-                    savePicker.FileTypeChoices.Add("Tagged image file multispectral format", new List<string>() { ".tiff" });
-                    savePicker.FileTypeChoices.Add("Microsoft Windows bitmap", new List<string>() { ".bmp" });
-                    savePicker.FileTypeChoices.Add("Portable Document Format", new List<string>() { ".pdf" });
-                    savePicker.FileTypeChoices.Add("Scalable Vector Graphics", new List<string>() { ".svg" });
-                    savePicker.FileTypeChoices.Add("Weppy image format", new List<string>() { ".webp" });
-
-
-                    // Default file name if the user does not type one in or select a file to replace
-                    StorageFile targetFile = await savePicker.PickSaveFileAsync();
-                    if (targetFile != null)
-                    {
-                        string chosenExtension = targetFile.FileType.TrimStart('.');
-                        string formattedExtension = CapitalizeFirstLetter(chosenExtension);
-                        imageFromStream.Format = (MagickFormat)Enum.Parse(typeof(MagickFormat), formattedExtension);
-                        // Prevent updates to the remote version of the file until
-                        // we finish making changes and call CompleteUpdatesAsync.
-                        CachedFileManager.DeferUpdates(targetFile);
-                        // write to file
-                        await FileIO.WriteBytesAsync(targetFile, imageFromStream.ToByteArray());
-
-                        //imageFromStream.Write(targetFile.Path);
-                        // Let Windows know that we're finished changing the file so
-                        // the other app can update the remote version of the file.
-                        // Completing updates may require Windows to ask for user input.
-                        Windows.Storage.Provider.FileUpdateStatus status =
-                            await CachedFileManager.CompleteUpdatesAsync(targetFile);
-                        if (status == Windows.Storage.Provider.FileUpdateStatus.Complete)
-                        {
-                            Debug.WriteLine("File " + targetFile.Name + " was saved.");
-                        }
-                        else
-                        {
-                            Debug.WriteLine("File " + targetFile.Name + " couldn't be saved.");
-                        }
-                    }
-                    else
-                    {
-                        Debug.WriteLine("Operation cancelled.");
-
-                    }
+                    ProcessFile(file);
                 }
             }
         }
+
+        private async Task ProcessFile(FileListElement fileElm)
+        {
+            fileElm.Status = FileStatus.IN_PROGRESS;
+            MagickImage img = null;
+            try
+            {
+                img = await ReadFile(fileElm);
+                ConvertFile(img);
+                bool result = await SaveFile(img);
+                fileElm.Status = result ? FileStatus.COMPLETED : FileStatus.ERROR;
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"{ex.Message}");
+                fileElm.Status = FileStatus.ERROR;
+            }
+            finally
+            {
+                if (img != null)
+                {
+                    img.Dispose();
+                }
+            }
+        }
+
+        private async Task<MagickImage> ReadFile(FileListElement fileElm)
+        {
+
+            StorageFile file = await Utils.GetFileForToken(fileElm.Token);
+            using (IRandomAccessStream fileStream = await file.OpenAsync(FileAccessMode.Read))
+            {
+                return new MagickImage(fileStream.AsStream());
+            }
+        }
+
+        private void ConvertFile(MagickImage img)
+        {
+            // TODO
+            img.Format = MagickFormat.Png;
+        }
+
+        private async Task<bool> SaveFile(MagickImage img)
+        {
+            StorageFolder targetFolder = await Utils.GetFolderForToken(SAVE_FOLDER_ACCESS_TOKEN);
+            StorageFile targetFile = await targetFolder.CreateFileAsync($"{img.FileName}.png", CreationCollisionOption.GenerateUniqueName);
+            await FileIO.WriteBytesAsync(targetFile, img.ToByteArray());
+            Windows.Storage.Provider.FileUpdateStatus status =
+                await CachedFileManager.CompleteUpdatesAsync(targetFile);
+            if (status == Windows.Storage.Provider.FileUpdateStatus.Complete)
+            {
+                Debug.WriteLine("File " + targetFile.Name + " was saved.");
+                return true;
+            }
+            else
+            {
+                Debug.WriteLine("File " + targetFile.Name + " couldn't be saved.");
+                return false;
+            }
+        }
+
 
         private async void Grid_Drop(object sender, DragEventArgs e)
         {
@@ -119,17 +139,6 @@ namespace HeicConverter
             {
                 var items = await e.DataView.GetStorageItemsAsync();
                 AddCollectionToFiles(items);
-/*                if (items.Any())
-                {
-                   StorageFolder folder = ApplicationData.Current.LocalFolder;
-                    if (contentType == "image/jpg" || contentType == "image/png" || contentType == "image/jpeg")
-                    {
-                        StorageFile newFile = await storageFile.CopyAsync(folder, storageFile.Name, NameCollisionOption.GenerateUniqueName);
-                        var bitmapImg = new BitmapImage();
-                        bitmapImg.SetSource(await storageFile.OpenAsync(FileAccessMode.Read));
-                        imgMain.Source = bitmapImg;
-                    }
-                }*/
             }
         }
 
@@ -187,10 +196,11 @@ namespace HeicConverter
                 if (item is StorageFile)
                 {
                     StorageFile file = (StorageFile)item;
+                    string token = Utils.RememberStorageItem(file);
                     bool isValid = file.Name.ToLower().EndsWith("heic") || file.Name.ToLower().EndsWith("heif");
                     if (!files.Any(x => x.Path == file.Path))
                     {
-                        files.Add(new FileListElement(file.Name, file.Path, isValid ? FileStatus.PENDING : FileStatus.INVALID));
+                        files.Add(new FileListElement(file.Name, file.Path, isValid ? FileStatus.PENDING : FileStatus.INVALID, token));
                     }
                 }
             }
