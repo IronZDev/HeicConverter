@@ -23,6 +23,7 @@ namespace HeicConverter
     public sealed partial class MainPage : Page
     {
         private const string SAVE_FOLDER_ACCESS_TOKEN = "SAVE_FOLDER_ACCESS_TOKEN";
+        private const int CHUNK_SIZE = 5; // We don't want to convert big number of files at once TODO: Improve so we do not have to wait for the entire chunk to finish before we start a new one
         private MainPageViewModel ViewModel;
         public MainPage()
         {
@@ -57,14 +58,19 @@ namespace HeicConverter
         private async Task processAllFiles()
         {
             List<Task> tasks = new List<Task>();
-            foreach (FileListElement file in ViewModel.files)
+            var chunks = Utils.Chunk(ViewModel.files, CHUNK_SIZE);
+
+            foreach (var chunk in chunks)
             {
-                if (file.Status != FileStatus.INVALID && file.Status != FileStatus.COMPLETED)
+                foreach (FileListElement file in chunk)
                 {
-                    tasks.Add(ProcessFile(file));
+                    if (file.Status != FileStatus.INVALID && file.Status != FileStatus.COMPLETED)
+                    {
+                        tasks.Add(ProcessFile(file));
+                    }
                 }
+                await Task.WhenAll(tasks);
             }
-            await Task.WhenAll(tasks);
             await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
             {
                 ViewModel.IsConversionInProgress = false;
