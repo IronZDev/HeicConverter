@@ -25,7 +25,7 @@
         </Grid>
         <Grid x:Name="MainApp_Grid" Visibility="Visible">
             <StackPanel Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Stretch" Spacing="20">
-                <ListView SelectionMode="None" BorderThickness="2" HorizontalAlignment="Stretch" x:Name="FilesList" Height="500" ItemsSource="{x:Bind files, Mode=OneWay}" Margin="20, 0, 20, 0" Background="{ThemeResource SystemControlBackgroundListLowBrush}" BorderBrush="{ThemeResource SystemControlBackgroundListMediumBrush}">
+                <ListView SelectionMode="None" BorderThickness="2" HorizontalAlignment="Stretch" x:Name="FilesList" Height="500" ItemsSource="{x:Bind ViewModel.files, Mode=OneWay}" Margin="20, 0, 20, 0" Background="{ThemeResource SystemControlBackgroundListLowBrush}" BorderBrush="{ThemeResource SystemControlBackgroundListMediumBrush}">
                     <ListView.Header >
                         <Grid Height="45" HorizontalAlignment="Stretch" Background="{ThemeResource SystemControlBackgroundListMediumBrush}" ColumnSpacing="10">
                             <Grid.ColumnDefinitions>
@@ -54,7 +54,11 @@
                                     <ColumnDefinition Width="60"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Orientation="Horizontal" Grid.Column="0" Margin="5,0,0,0">
-                                    <FontIcon x:Name="StatusIcon" VerticalAlignment="Center" Glyph="&#xE930;" Visibility="Visible"/>
+									<FontIcon x:Name="StatusIcon" VerticalAlignment="Center" Glyph="&#xE930;" Visibility="Visible">
+										<ToolTipService.ToolTip>
+											<ToolTip x:Name="StatusTooltip" Content="{Binding TooltipMsg, Mode=OneWay}" HorizontalOffset="20" VerticalOffset="30"/>
+										</ToolTipService.ToolTip>
+									</FontIcon>
                                     <ProgressRing x:Name="StatusLoading" VerticalAlignment="Center" Visibility="Collapsed" IsActive="True"/>
                                     <TextBlock VerticalAlignment="Center" Margin="5,0,0,0" Text="{Binding Status, Converter={StaticResource FileStatusToNameConverter}, Mode=OneWay}"/>
                                     <Interactivity:Interaction.Behaviors>
@@ -105,7 +109,12 @@
                         </Style>
                     </ListView.ItemContainerStyle>
                 </ListView>
-                <Button x:Name="ConvertBtn" HorizontalAlignment="Center" Content="Convert" Click="ConvertBtn_Click"/>
+				<Button x:Name="ConvertBtn" HorizontalAlignment="Center" Click="ConvertBtn_Click">
+					<StackPanel Orientation="Horizontal">
+						<ProgressRing x:Name="ConvertionInProgress" Visibility="Collapsed"/>
+						<TextBlock Margin="5,0,0,0" Text="Convert"/>
+					</StackPanel>
+				</Button>
             </StackPanel>
         </Grid>
     </Grid>

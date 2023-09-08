@@ -28,24 +28,18 @@ namespace HeicConverter
     public sealed partial class MainPage : Page
     {
         private const string SAVE_FOLDER_ACCESS_TOKEN = "SAVE_FOLDER_ACCESS_TOKEN";
-        ObservableCollection<FileListElement> files = new ObservableCollection<FileListElement>();
+        private MainPageViewModel ViewModel;
         public MainPage()
         {
             this.InitializeComponent();
-        }
-
-        private string CapitalizeFirstLetter(string s)
-        {
-            if (s.Length == 0)
-                return s;
-            else if (s.Length == 1)
-                return s.ToUpper();
-            else
-                return char.ToUpper(s[0]) + s.Substring(1);
+            ViewModel = new MainPageViewModel();
         }
 
         private async void ConvertBtn_Click(object sender, RoutedEventArgs e)
         {
+            ConvertionInProgress.IsActive = true;
+            ConvertionInProgress.Visibility = Visibility.Visible;
+            ConvertBtn.IsEnabled = false;
             var saveFolderPicker = new Windows.Storage.Pickers.FolderPicker
             {
                 ViewMode = Windows.Storage.Pickers.PickerViewMode.List,
@@ -61,31 +55,54 @@ namespace HeicConverter
 
             Utils.RememberStorageItem(_fileAccess, SAVE_FOLDER_ACCESS_TOKEN);
             StorageApplicationPermissions.FutureAccessList.AddOrReplace(SAVE_FOLDER_ACCESS_TOKEN, _fileAccess);
-            
-            foreach (FileListElement file in files)
+
+            Task.Run(() => processAllFiles());
+        }
+
+        private async Task processAllFiles()
+        {
+            List<Task> tasks = new List<Task>();
+            foreach (FileListElement file in ViewModel.files)
             {
                 if (file.Status != FileStatus.INVALID && file.Status != FileStatus.COMPLETED)
                 {
-                    ProcessFile(file);
+                    tasks.Add(ProcessFile(file));
                 }
             }
+            await Task.WhenAll(tasks);
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () => {
+                ConvertionInProgress.IsActive = false;
+                ConvertionInProgress.Visibility = Visibility.Collapsed;
+                ConvertBtn.IsEnabled = true;
+            });
         }
 
         private async Task ProcessFile(FileListElement fileElm)
         {
-            fileElm.Status = FileStatus.IN_PROGRESS;
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+            {
+                fileElm.Status = FileStatus.IN_PROGRESS;
+            });
             MagickImage img = null;
             try
             {
                 img = await ReadFile(fileElm);
                 ConvertFile(img);
-                bool result = await SaveFile(img);
-                fileElm.Status = result ? FileStatus.COMPLETED : FileStatus.ERROR;
+                bool result = await SaveFile(img, Path.GetFileNameWithoutExtension(fileElm.Path));
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    fileElm.Status = result ? FileStatus.COMPLETED : FileStatus.ERROR;
+                    fileElm.TooltipMsg = "";
+                });
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"{ex.Message}");
-                fileElm.Status = FileStatus.ERROR;
+                await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, () =>
+                {
+                    fileElm.Status = FileStatus.ERROR;
+                    fileElm.TooltipMsg = ex.Message;
+                });
             }
             finally
             {
@@ -112,10 +129,10 @@ namespace HeicConverter
             img.Format = MagickFormat.Png;
         }
 
-        private async Task<bool> SaveFile(MagickImage img)
+        private async Task<bool> SaveFile(MagickImage img, string fileName)
         {
             StorageFolder targetFolder = await Utils.GetFolderForToken(SAVE_FOLDER_ACCESS_TOKEN);
-            StorageFile targetFile = await targetFolder.CreateFileAsync($"{img.FileName}.png", CreationCollisionOption.GenerateUniqueName);
+            StorageFile targetFile = await targetFolder.CreateFileAsync($"{fileName}.png", CreationCollisionOption.GenerateUniqueName);
             await FileIO.WriteBytesAsync(targetFile, img.ToByteArray());
             Windows.Storage.Provider.FileUpdateStatus status =
                 await CachedFileManager.CompleteUpdatesAsync(targetFile);
@@ -166,12 +183,12 @@ namespace HeicConverter
         private void RemoveFileBtn_Click(object sender, RoutedEventArgs e)
         {
             FileListElement i = (FileListElement)((FrameworkElement)sender).DataContext;
-            files?.Remove(i);
+            ViewModel.files?.Remove(i);
         }
 
         private void ClearAllBtn_Click(object sender, RoutedEventArgs e)
         {
-            files.Clear();
+            ViewModel.files.Clear();
         }
 
         private async void AddToListBtn_Click(object sender, RoutedEventArgs e)
@@ -198,9 +215,9 @@ namespace HeicConverter
                     StorageFile file = (StorageFile)item;
                     string token = Utils.RememberStorageItem(file);
                     bool isValid = file.Name.ToLower().EndsWith("heic") || file.Name.ToLower().EndsWith("heif");
-                    if (!files.Any(x => x.Path == file.Path))
+                    if (!ViewModel.files.Any(x => x.Path == file.Path))
                     {
-                        files.Add(new FileListElement(file.Name, file.Path, isValid ? FileStatus.PENDING : FileStatus.INVALID, token));
+                        ViewModel.files.Add(new FileListElement(file.Name, file.Path, isValid ? FileStatus.PENDING : FileStatus.INVALID, token));
                     }
                 }
             }

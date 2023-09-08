@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 
 namespace HeicConverter.Data
 {
@@ -20,6 +21,7 @@ namespace HeicConverter.Data
     public class FileListElement : INotifyPropertyChanged
     {
         private FileStatus _status;
+        private string _tooltipMsg;
 
         public string Name { get; }
         public string Path { get; }
@@ -28,6 +30,12 @@ namespace HeicConverter.Data
             get { return _status; }
             set { _status = value; OnPropertyChanged("Status"); } 
         } 
+
+        public string TooltipMsg
+        {
+            get { return _tooltipMsg; }
+            set { _tooltipMsg = value; OnPropertyChanged("TooltipMsg"); }
+        }
 
         public FileListElement (string name, string path, FileStatus status, string token)
         {
