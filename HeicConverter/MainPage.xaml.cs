@@ -206,6 +206,12 @@ namespace HeicConverter
         {
             FileListElement i = (FileListElement)((FrameworkElement)sender).DataContext;
             ViewModel.files?.Remove(i);
+            // Fix for wrong icons bug (Remove all images and add a new one)
+            if (ViewModel.files?.Count == 0)
+            {
+                ViewModel.files.Clear();
+            }
+            Debug.WriteLine("Removed");
         }
 
         private void ClearAllBtn_Click(object sender, RoutedEventArgs e)
