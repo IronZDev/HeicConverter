@@ -11,6 +11,12 @@
     xmlns:converters="using:HeicConverter.Data.Converters"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
     <UserControl.Resources>
+        <DataTemplate x:Key="UnhandledFilesTemplate">
+            <TextBlock Text="{Binding}" FontSize="12"/>
+        </DataTemplate>
+        <Style TargetType="Button" x:Key="UnhandledFilesDialogButtonStyle">
+            <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
         <converters:FileStatusToNameConverter x:Key="FileStatusToNameConverter"/>
         <converters:FileStatusToStringConverter x:Key="FileStatusToStringConverter"/>
         <converters:NegateBoolConverter x:Key="NegateBoolConverter"/>
@@ -116,7 +122,7 @@
                     </ListView.ItemContainerStyle>
                 </ListView>
                 <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
-                    <ComboBox x:Name="FormatOptionsCB" Width="200" SelectionChanged="FormatOptionsCB_SelectionChanged" ItemsSource="{x:Bind ViewModel.formatOptions}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" />
+                    <ComboBox x:Name="FormatOptionsCB" Width="200" SelectionChanged="FormatOptionsCB_SelectionChanged" ItemsSource="{x:Bind ViewModel.formatOptions}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}"  />
                     <Button x:Name="ConvertBtn" HorizontalAlignment="Center" Click="ConvertBtn_Click" IsEnabled="{x:Bind ViewModel.isConvertButtonEnabled(ViewModel.IsConversionInProgress, ViewModel.files), Mode=OneWay}" >
                         <StackPanel Orientation="Horizontal">
                             <Interactivity:Interaction.Behaviors>

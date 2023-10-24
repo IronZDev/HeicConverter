@@ -10,11 +10,23 @@ namespace HeicConverter
 {
     public static class Utils
     {
+        // FutureAccessList has a limit of 1000 entries!!
         public static string RememberStorageItem(IStorageItem file, string token = null)
         {
             string itemToken = token == null ? $"{file.Name}_{Guid.NewGuid().ToString()}" : token;
             StorageApplicationPermissions.FutureAccessList.AddOrReplace(itemToken, file);
             return itemToken;
+        }
+
+        public static void ForgetFileToken(string token)
+        {
+            if (!StorageApplicationPermissions.FutureAccessList.ContainsItem(token)) return;
+            StorageApplicationPermissions.FutureAccessList.Remove(token);
+        }
+
+        public static void ClearFutureAccessList()
+        {
+            StorageApplicationPermissions.FutureAccessList.Clear();
         }
 
         public static async Task<StorageFile> GetFileForToken(string token)

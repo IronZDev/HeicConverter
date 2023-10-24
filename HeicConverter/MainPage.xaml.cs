@@ -10,8 +10,11 @@ using Windows.ApplicationModel.DataTransfer;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
 using Windows.Storage.Streams;
+using Windows.UI;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Media;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -50,8 +53,17 @@ namespace HeicConverter
                 return;
             }
 
-            Utils.RememberStorageItem(_fileAccess, SAVE_FOLDER_ACCESS_TOKEN);
-            StorageApplicationPermissions.FutureAccessList.AddOrReplace(SAVE_FOLDER_ACCESS_TOKEN, _fileAccess);
+            try
+            {
+                Utils.RememberStorageItem(_fileAccess, SAVE_FOLDER_ACCESS_TOKEN);
+                StorageApplicationPermissions.FutureAccessList.AddOrReplace(SAVE_FOLDER_ACCESS_TOKEN, _fileAccess);
+            } catch (Exception ex)
+            {
+                if (ex is SystemException)
+                {
+                    Utils.ClearFutureAccessList();
+                }
+            }
 
             Task.Run(() => processAllFiles());
         }
@@ -210,6 +222,7 @@ namespace HeicConverter
         private void RemoveFileBtn_Click(object sender, RoutedEventArgs e)
         {
             FileListElement i = (FileListElement)((FrameworkElement)sender).DataContext;
+            Utils.ForgetFileToken(i.Token);
             ViewModel.files?.Remove(i);
             // Fix for wrong icons bug (Remove all images and add a new one)
             if (ViewModel.files?.Count == 0)
@@ -221,6 +234,7 @@ namespace HeicConverter
 
         private void ClearAllBtn_Click(object sender, RoutedEventArgs e)
         {
+            Utils.ClearFutureAccessList();
             ViewModel.files.Clear();
         }
 
@@ -238,25 +252,60 @@ namespace HeicConverter
             AddCollectionToFiles(filesToAdd);
         }
 
-        private void AddCollectionToFiles(IEnumerable<IStorageItem> items)
+        private async void AddCollectionToFiles(IEnumerable<IStorageItem> items)
         {
             if (!items.Any()) return;
-            foreach (var item in items)
+            List<string> notHandledFiles = new List<string>();
+
+            long maxImagesNum = StorageApplicationPermissions.FutureAccessList.MaximumItemsAllowed - StorageApplicationPermissions.FutureAccessList.Entries.Count() - 1;
+            if (items.Count() > maxImagesNum)
             {
-                if (item is StorageFile)
+                await ShowInfoDialog($"The number of images cannot exceed {StorageApplicationPermissions.FutureAccessList.MaximumItemsAllowed - 1}", "Max files number limit exceeded");
+                return;
+            }
+
+            int restartCounter = 0;
+            do
+            {
+                if (restartCounter > 1)
                 {
-                    StorageFile file = (StorageFile)item;
-                    string token = Utils.RememberStorageItem(file);
-                    bool isValid = file.Name.ToLower().EndsWith("heic") || file.Name.ToLower().EndsWith("heif");
-                    if (!ViewModel.files.Any(x => x.Path == file.Path) && isValid)
+                    await ShowInfoDialog("Could not parse the files! Try restarting the app.", "Fatal error");
+                    return;
+                }
+
+                foreach (var item in items)
+                {
+                    try
                     {
-                        ViewModel.files.Add(new FileListElement(file.Name, file.Path, FileStatus.PENDING, token));
+                        if (item is StorageFile)
+                        {
+                            StorageFile file = (StorageFile)item;
+                            string token = Utils.RememberStorageItem(file);
+                            bool isValid = file.Name.ToLower().EndsWith("heic") || file.Name.ToLower().EndsWith("heif");
+                            if (!ViewModel.files.Any(x => x.Path == file.Path) && isValid)
+                            {
+                                ViewModel.files.Add(new FileListElement(file.Name, file.Path, FileStatus.PENDING, token));
+                            }
+                            else
+                            {
+                                notHandledFiles.Add(file.Name);
+                            }
+                        }
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        // TODO MessageBox
+                        if (ex is SystemException)
+                        {
+                            Utils.ClearFutureAccessList();
+                            restartCounter++;
+                        }
                     }
                 }
+            } while (restartCounter > 0);
+            
+            if (notHandledFiles.Any())
+            {
+                await ShowUnhandledFilesDialog(notHandledFiles);
             }
         }
 
@@ -267,6 +316,49 @@ namespace HeicConverter
                 item.Status = FileStatus.PENDING;
             }
             ViewModel.ConvertedFilesCounter = 0;
+        }
+
+        private async Task<ContentDialogResult> ShowUnhandledFilesDialog(List<string> notHandledFiles)
+        {
+            ContentDialog notHandledFilesDialog = new ContentDialog()
+            {
+                Title = "Unhandled file types!",
+                PrimaryButtonText = "Ok",
+                PrimaryButtonStyle = this.Resources["UnhandledFilesDialogButtonStyle"] as Style
+            };
+
+            StackPanel stackPanel = new StackPanel()
+            {
+                Orientation = Orientation.Vertical,
+                Spacing = 10,
+            };
+
+            TextBlock dialogText = new TextBlock()
+            {
+                Text = "Only .heic, .heif images can be converted. The following files are not supported: "
+            };
+
+            ListView unhandledFilesList = new ListView()
+            {
+                BorderThickness = new Thickness(1),
+                BorderBrush = new SolidColorBrush(Color.FromArgb(102, 255, 255, 255)),
+                ItemTemplate = this.Resources["UnhandledFilesTemplate"] as DataTemplate,
+                ItemsSource = notHandledFiles,
+                MaxHeight = this.ActualHeight * 0.5,
+                SelectionMode = ListViewSelectionMode.None
+            };
+
+            stackPanel.Children.Add(dialogText);
+            stackPanel.Children.Add(unhandledFilesList);
+
+            notHandledFilesDialog.Content = stackPanel;
+            return await notHandledFilesDialog.ShowAsync();
+        }
+
+        private async Task<IUICommand> ShowInfoDialog(string text, string title)
+        {
+            MessageDialog fatalErrorDialog = new MessageDialog(text, title);
+            return await fatalErrorDialog.ShowAsync();
         }
     }
 }
