@@ -55,11 +55,11 @@
                                     <ColumnDefinition Width="60"/>
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Orientation="Horizontal" Grid.Column="0" Margin="5,0,0,0">
-									<FontIcon x:Name="StatusIcon" VerticalAlignment="Center" Glyph="&#xE930;" Visibility="Visible">
-										<ToolTipService.ToolTip>
-											<ToolTip x:Name="StatusTooltip" Content="{Binding TooltipMsg, Mode=OneWay}" HorizontalOffset="20" VerticalOffset="30"/>
-										</ToolTipService.ToolTip>
-									</FontIcon>
+                                    <FontIcon x:Name="StatusIcon" VerticalAlignment="Center" Glyph="&#xE930;" Visibility="Visible">
+                                        <ToolTipService.ToolTip>
+                                            <ToolTip x:Name="StatusTooltip" Content="{Binding TooltipMsg, Mode=OneWay}" HorizontalOffset="20" VerticalOffset="30"/>
+                                        </ToolTipService.ToolTip>
+                                    </FontIcon>
                                     <ProgressRing x:Name="StatusLoading" VerticalAlignment="Center" Visibility="Collapsed" IsActive="True"/>
                                     <TextBlock VerticalAlignment="Center" Margin="5,0,0,0" Text="{Binding Status, Converter={StaticResource FileStatusToNameConverter}, Mode=OneWay}"/>
                                     <Interactivity:Interaction.Behaviors>
@@ -116,7 +116,7 @@
                     </ListView.ItemContainerStyle>
                 </ListView>
                 <StackPanel Orientation="Horizontal" Spacing="20" HorizontalAlignment="Center">
-                    <ComboBox x:Name="FormatOptionsCB" Width="200" ItemsSource="{x:Bind ViewModel.formatOptions}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" />
+                    <ComboBox x:Name="FormatOptionsCB" Width="200" SelectionChanged="FormatOptionsCB_SelectionChanged" ItemsSource="{x:Bind ViewModel.formatOptions}" SelectedItem="{x:Bind ViewModel.SelectedItem, Mode=TwoWay}" />
                     <Button x:Name="ConvertBtn" HorizontalAlignment="Center" Click="ConvertBtn_Click" IsEnabled="{x:Bind ViewModel.isConvertButtonEnabled(ViewModel.IsConversionInProgress, ViewModel.files), Mode=OneWay}" >
                         <StackPanel Orientation="Horizontal">
                             <Interactivity:Interaction.Behaviors>
@@ -134,6 +134,19 @@
                             <TextBlock x:Name="ConvertBtnText" Margin="5,0,0,0" Text="{x:Bind ViewModel.getConvertBtnText(ViewModel.IsConversionInProgress, ViewModel.ConvertedFilesCounter, ViewModel.files), Mode=OneWay}"/>
                         </StackPanel>
                     </Button>
+                </StackPanel>
+                <StackPanel x:Name="AdditionalOptions" Orientation="Horizontal" HorizontalAlignment="Center" Spacing="20">
+                    <CheckBox x:Name="LosslessCompressionCheckbox" HorizontalAlignment="Center" ToolTipService.ToolTip="The image will be converted without loss of image quality. Checking this option will increase the file size.">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock>Use lossless compression</TextBlock>
+                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE946;" Margin="5,1,0,0"/>
+                        </StackPanel> </CheckBox>
+                    <CheckBox x:Name="AdvancedOptimizationCheckbox" HorizontalAlignment="Center" ToolTipService.ToolTip="Single image will be optimized several times in a row, which may result in smaller file size. This option may extend processing time significantly!">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock>Use advanced optimization</TextBlock>
+                            <FontIcon FontFamily="Segoe MDL2 Assets" Glyph="&#xE946;" Margin="5,1,0,0"/>
+                        </StackPanel>
+                    </CheckBox>
                 </StackPanel>
             </StackPanel>
         </Grid>

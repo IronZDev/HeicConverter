@@ -12,6 +12,8 @@ namespace HeicConverter.Data
         public ObservableCollection<FileListElement> files = new ObservableCollection<FileListElement>();
         private bool _isConversionInProgress = false;
         private long _convertedFilesCounter = 0;
+        private bool _isAdvancedOptimizationEnabled = false;
+        private bool _isLosslessConversionEnabled = false;
         private FormatOption _selectedItem = null;
 
         public List<FormatOption> formatOptions = new List<FormatOption> {
@@ -40,6 +42,17 @@ namespace HeicConverter.Data
         {
             get { return _convertedFilesCounter; }
             set { _convertedFilesCounter = value; OnPropertyChanged("ConvertedFilesCounter"); }
+        }
+
+        public bool IsAdvancedOptimizationEnabled { 
+            get { return _isAdvancedOptimizationEnabled; }
+            set { _isAdvancedOptimizationEnabled = value; OnPropertyChanged("IsAdvancedOptimizationEnabled"); }
+        }
+
+        public bool IsLosslessConvertionEnabled
+        {
+            get { return _isLosslessConversionEnabled; }
+            set { _isLosslessConversionEnabled = value; OnPropertyChanged("IsLosslessConvertionEnabled"); }
         }
 
         public MainPageViewModel()

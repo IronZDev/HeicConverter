@@ -25,7 +25,6 @@ namespace HeicConverter
         private const string SAVE_FOLDER_ACCESS_TOKEN = "SAVE_FOLDER_ACCESS_TOKEN";
         private const int CHUNK_SIZE = 5; // We don't want to convert big number of files at once TODO: Improve so we do not have to wait for the entire chunk to finish before we start a new one
         private const bool OPTIMIZE_IMG = true;
-        private const bool EXTEND_OPTIMIZATION = false;
         private MainPageViewModel ViewModel;
         public MainPage()
         {
@@ -162,11 +161,17 @@ namespace HeicConverter
             var optimizer = new ImageOptimizer
             {
                 IgnoreUnsupportedFormats = true,
-                OptimalCompression = EXTEND_OPTIMIZATION,
+                OptimalCompression = ViewModel.IsAdvancedOptimizationEnabled,
             };
             using (IRandomAccessStream fileStream = await img.OpenAsync(FileAccessMode.ReadWrite))
             {
-                optimizer.LosslessCompress(fileStream.AsStream());
+                if (ViewModel.IsLosslessConvertionEnabled)
+                {
+                    optimizer.LosslessCompress(fileStream.AsStream());
+                } else
+                {
+                    optimizer.Compress(fileStream.AsStream());
+                }
             }
         }
 
@@ -253,6 +258,15 @@ namespace HeicConverter
                     }
                 }
             }
+        }
+
+        private void FormatOptionsCB_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            foreach (var item in ViewModel.files)
+            {
+                item.Status = FileStatus.PENDING;
+            }
+            ViewModel.ConvertedFilesCounter = 0;
         }
     }
 }
