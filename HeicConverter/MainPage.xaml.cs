@@ -57,7 +57,8 @@ namespace HeicConverter
             {
                 Utils.RememberStorageItem(_fileAccess, SAVE_FOLDER_ACCESS_TOKEN);
                 StorageApplicationPermissions.FutureAccessList.AddOrReplace(SAVE_FOLDER_ACCESS_TOKEN, _fileAccess);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 if (ex is SystemException)
                 {
@@ -180,7 +181,8 @@ namespace HeicConverter
                 if (ViewModel.IsLosslessConvertionEnabled)
                 {
                     optimizer.LosslessCompress(fileStream.AsStream());
-                } else
+                }
+                else
                 {
                     optimizer.Compress(fileStream.AsStream());
                 }
@@ -300,7 +302,8 @@ namespace HeicConverter
                             }
                         }
                     }
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     if (ex is SystemException)
                     {
@@ -310,7 +313,8 @@ namespace HeicConverter
                 }
             } while (restartCounter > 0);
 
-            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => {
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () =>
+            {
                 ListLoadingOverlay.Visibility = Visibility.Collapsed;
                 ViewModel.files.AddRange(filesToAddList);
 

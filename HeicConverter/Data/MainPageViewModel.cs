@@ -30,11 +30,12 @@ namespace HeicConverter.Data
 
         public FormatOption SelectedItem
         {
-            get {  return _selectedItem; }
+            get { return _selectedItem; }
             set { if (value == _selectedItem) return; _selectedItem = value; OnPropertyChanged("SelectedItem"); }
         }
 
-        public bool IsConversionInProgress {  
+        public bool IsConversionInProgress
+        {
             get { return _isConversionInProgress; }
             set { _isConversionInProgress = value; OnPropertyChanged("IsConversionInProgress"); }
         }
@@ -45,7 +46,8 @@ namespace HeicConverter.Data
             set { _convertedFilesCounter = value; OnPropertyChanged("ConvertedFilesCounter"); }
         }
 
-        public bool IsAdvancedOptimizationEnabled { 
+        public bool IsAdvancedOptimizationEnabled
+        {
             get { return _isAdvancedOptimizationEnabled; }
             set { _isAdvancedOptimizationEnabled = value; OnPropertyChanged("IsAdvancedOptimizationEnabled"); }
         }

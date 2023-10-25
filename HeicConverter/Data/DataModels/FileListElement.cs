@@ -15,7 +15,7 @@ namespace HeicConverter.Data
         [Description("Error")]
         ERROR
     }
-    
+
     // Only FileStatus might change, so no need for triggering ProprtyChanged Event for others;
     public class FileListElement : INotifyPropertyChanged
     {
@@ -25,10 +25,11 @@ namespace HeicConverter.Data
         public string Name { get; }
         public string Path { get; }
         public string Token { get; }
-        public FileStatus Status { 
+        public FileStatus Status
+        {
             get { return _status; }
-            set { _status = value; OnPropertyChanged("Status"); } 
-        } 
+            set { _status = value; OnPropertyChanged("Status"); }
+        }
 
         public string TooltipMsg
         {
@@ -36,7 +37,7 @@ namespace HeicConverter.Data
             set { _tooltipMsg = value; OnPropertyChanged("TooltipMsg"); }
         }
 
-        public FileListElement (string name, string path, FileStatus status, string token)
+        public FileListElement(string name, string path, FileStatus status, string token)
         {
             Name = name;
             Path = path;

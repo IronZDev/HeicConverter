@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 using Windows.Storage.AccessCache;
@@ -41,7 +40,7 @@ namespace HeicConverter
             return await StorageApplicationPermissions.FutureAccessList.GetFolderAsync(token);
         }
 
-        public static IEnumerable<IEnumerable<T>> Chunk<T> (this IEnumerable<T> source, int itemsPerSet)
+        public static IEnumerable<IEnumerable<T>> Chunk<T>(this IEnumerable<T> source, int itemsPerSet)
         {
             var sourceList = source as List<T> ?? source.ToList();
             for (var index = 0; index < sourceList.Count; index += itemsPerSet)
