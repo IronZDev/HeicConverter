@@ -193,8 +193,8 @@ namespace HeicConverter
             Grid_DragLeave(sender, e);
             if (e.DataView.Contains(StandardDataFormats.StorageItems))
             {
-                var items = await e.DataView.GetStorageItemsAsync();
-                AddCollectionToFiles(items);
+                var itemsToAdd = await e.DataView.GetStorageItemsAsync();
+                AddFilesToList(itemsToAdd);
             }
         }
 
@@ -249,12 +249,19 @@ namespace HeicConverter
             picker.FileTypeFilter.Add(".heif");
 
             IReadOnlyList<StorageFile> filesToAdd = await picker.PickMultipleFilesAsync();
-            AddCollectionToFiles(filesToAdd);
+            AddFilesToList(filesToAdd);
         }
 
-        private async void AddCollectionToFiles(IEnumerable<IStorageItem> items)
+        private void AddFilesToList(IEnumerable<IStorageItem> filesToAdd)
+        {
+            ListLoadingOverlay.Visibility = Visibility.Visible;
+            Task.Run(() => AddFilesToListAsync(filesToAdd, ViewModel.files));
+        }
+
+        private async Task AddFilesToListAsync(IEnumerable<IStorageItem> items, IEnumerable<FileListElement> currentFilesList)
         {
             if (!items.Any()) return;
+            List<FileListElement> filesToAddList = new List<FileListElement>();
             List<string> notHandledFiles = new List<string>();
 
             long maxImagesNum = StorageApplicationPermissions.FutureAccessList.MaximumItemsAllowed - StorageApplicationPermissions.FutureAccessList.Entries.Count() - 1;
@@ -282,11 +289,11 @@ namespace HeicConverter
                             StorageFile file = (StorageFile)item;
                             string token = Utils.RememberStorageItem(file);
                             bool isValid = file.Name.ToLower().EndsWith("heic") || file.Name.ToLower().EndsWith("heif");
-                            if (!ViewModel.files.Any(x => x.Path == file.Path) && isValid)
+                            if (!currentFilesList.Any(x => x.Path == file.Path) && isValid)
                             {
-                                ViewModel.files.Add(new FileListElement(file.Name, file.Path, FileStatus.PENDING, token));
+                                filesToAddList.Add(new FileListElement(file.Name, file.Path, FileStatus.PENDING, token));
                             }
-                            else
+                            else if (!isValid)
                             {
                                 notHandledFiles.Add(file.Name);
                             }
@@ -302,11 +309,16 @@ namespace HeicConverter
                     }
                 }
             } while (restartCounter > 0);
-            
-            if (notHandledFiles.Any())
-            {
-                await ShowUnhandledFilesDialog(notHandledFiles);
-            }
+
+            await Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.Normal, async () => {
+                ListLoadingOverlay.Visibility = Visibility.Collapsed;
+                ViewModel.files.AddRange(filesToAddList);
+
+                if (notHandledFiles.Any())
+                {
+                    await ShowUnhandledFilesDialog(notHandledFiles);
+                }
+            });
         }
 
         private void FormatOptionsCB_SelectionChanged(object sender, SelectionChangedEventArgs e)

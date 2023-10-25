@@ -1,4 +1,5 @@
 ﻿using HeicConverter.Data.Converters;
+using HeicConverter.Helpers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -9,7 +10,7 @@ namespace HeicConverter.Data
     {
         private const string CONVERT_BTN_PENDING_TEXT = "Convert";
         private const string CONVERT_BTN_CONVERTING_TEXT = "Converting...";
-        public ObservableCollection<FileListElement> files = new ObservableCollection<FileListElement>();
+        public RangeEnabledObservableCollection<FileListElement> files = new RangeEnabledObservableCollection<FileListElement>();
         private bool _isConversionInProgress = false;
         private long _convertedFilesCounter = 0;
         private bool _isAdvancedOptimizationEnabled = false;
