@@ -280,10 +280,11 @@ namespace HeicConverter
                     return;
                 }
 
-                foreach (var item in items)
+                try
                 {
-                    try
+                    foreach (var item in items)
                     {
+
                         if (item is StorageFile)
                         {
                             StorageFile file = (StorageFile)item;
@@ -299,13 +300,12 @@ namespace HeicConverter
                             }
                         }
                     }
-                    catch (Exception ex)
+                } catch (Exception ex)
+                {
+                    if (ex is SystemException)
                     {
-                        if (ex is SystemException)
-                        {
-                            Utils.ClearFutureAccessList();
-                            restartCounter++;
-                        }
+                        Utils.ClearFutureAccessList();
+                        restartCounter++;
                     }
                 }
             } while (restartCounter > 0);
